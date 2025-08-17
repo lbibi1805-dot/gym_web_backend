@@ -6,15 +6,6 @@ import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { handleControllerError } from '../helpers/controllerHelper';
 
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 10;
-        
-        const result = await UserService.getAllUsers(page, limit);
-        res.status(StatusCode.OK).json(HttpResponse.success(result, 'Users retrieved successfully'));
-    } catch (error) {
-        handleControllerError(res, error);
-    }
 };
 
 export const getUserById = async (req: Request, res: Response): Promise<void> => {
@@ -31,8 +22,8 @@ export const getCurrentUser = async (req: AuthenticatedRequest, res: Response): 
     try {
         const userId = req.user?.id;
         if (!userId) {
-        res.status(StatusCode.UNAUTHORIZED).json(HttpResponse.unauthorized('User not authenticated'));
-        return;
+            res.status(StatusCode.UNAUTHORIZED).json(HttpResponse.unauthorized('User not authenticated'));
+            return;
         }
         
         const user = await UserService.getCurrentUser(userId);
