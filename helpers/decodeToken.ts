@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
-import { JWTPayload } from './jwtGenerate.helper';
+import { JWTPayload } from '../types/common.types';
 
 export const decodeToken = (token: string): JWTPayload | null => {
   try {

@@ -6,7 +6,19 @@ A TypeScript Express.js backend API for gym management system.
 
 - User authentication and authorization
 - Event management
-- Role-based access control
+### User Management
+## Business Rules
+
+### User Management
+1. New users register with "pending" status and "client" role automatically
+2. Admin role can **only** be assigned by manually updating the database (no API endpoint)
+3. Admin approval required before clients can book sessions
+4. Admin can approve/reject/suspend users
+- ✅ JWT-based authentication
+- ✅ Role-based access control (Client/Admin)
+- ✅ User status management (Pending/Approved/Rejected/Suspended)
+- ✅ Auto-assignment of 'client' role for new users
+- ✅ Admin role only assignable via database update (security)
 - Email notifications
 - File upload support
 - Cron job scheduling

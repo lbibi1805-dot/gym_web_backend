@@ -14,6 +14,9 @@ dotenv.config();
 // Import routes
 import indexRouter from './routes/index';
 
+// Initialize cron jobs
+import './cron/cronConfig';
+
 const app = express();
 
 // Security middleware
@@ -40,7 +43,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
-app.use('/', indexRouter);
+app.use('/api', indexRouter);
 
 // 404 handler
 app.use((_req, res, _next) => {

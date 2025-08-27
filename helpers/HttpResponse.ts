@@ -42,4 +42,8 @@ export class HttpResponse {
   static conflict<T = unknown>(message: string = 'Conflict', data: T = null as T) {
     return this.error(message, StatusCode.CONFLICT, data);
   }
+
+  static internalServerError<T = unknown>(message: string = 'Internal server error', data: T = null as T) {
+    return this.error(message, StatusCode.INTERNAL_SERVER_ERROR, data);
+  }
 }

@@ -1,5 +1,6 @@
 import { Schema, model } from 'mongoose';
 import { UserInterface } from '../interfaces/user.interfaces';
+import { UserStatus } from '../enums/userStatus.enums';
 
 /**
  * Mongoose schema for user accounts.
@@ -38,8 +39,13 @@ const userSchema = new Schema<UserInterface>(
         },
         role: {
         type: String,
-        default: 'user',
-        enum: ['user', 'admin'],
+        default: 'client', // All new users are automatically clients
+        enum: ['client', 'admin'], // Admin role can only be set via database update
+        },
+        status: {
+        type: String,
+        default: UserStatus.PENDING,
+        enum: Object.values(UserStatus),
         },
         isDeleted: {
         type: Boolean,

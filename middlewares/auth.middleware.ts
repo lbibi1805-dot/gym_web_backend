@@ -1,15 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
+import { AuthenticatedRequest } from '../types/common.types';
 import { decodeToken } from '../helpers/decodeToken';
 import { HttpResponse } from '../helpers/HttpResponse';
 import { StatusCode } from '../enums/statusCode.enums';
-
-export interface AuthenticatedRequest extends Request {
-    user?: {
-        id: string;
-        email: string;
-        role: string;
-    };
-}
 
 const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
