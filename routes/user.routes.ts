@@ -3,6 +3,7 @@ import { getUsers, getUserById, getCurrentUser, updateUser, deleteUser } from '.
 import authMiddleware from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validation.middleware';
 import { updateUserSchema } from '../validation/user.validation';
+import { adminMiddleware } from '../middlewares/admin.middleware';
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ const router = express.Router();
  * @desc Get all users with pagination
  * @access Private (Admin)
  */
-router.get('/', authMiddleware, getUsers);
+router.get('/', authMiddleware, adminMiddleware, getUsers);
 
 /**
  * @route GET /users/me

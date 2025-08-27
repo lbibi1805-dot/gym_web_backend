@@ -87,13 +87,13 @@ router.put(
 
 /**
  * @route DELETE /api/workout-sessions/:id
- * @desc Delete workout session (Admin only)
- * @access Private (Admin only)
+ * @desc Delete workout session (Admin can delete any, Client can delete own)
+ * @access Private (Admin/Client)
  */
 router.delete(
     '/:id',
     authMiddleware,
-    adminMiddleware,
+    approvedUserMiddleware, // Changed from adminMiddleware to approvedUserMiddleware
     WorkoutSessionController.deleteWorkoutSession
 );
 

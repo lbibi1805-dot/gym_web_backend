@@ -1,12 +1,12 @@
 # 🧪 COMPREHENSIVE API TESTING GUIDE
-**Gym Web Backend - Complete Testing Suite**
+**Gym Web Backend - Complete Testing Suite - UPDATED VERSION**
 
 ## 📋 TESTING OVERVIEW
 This guide provides step-by-step testing for all API endpoints including:
 - ✅ Authentication & Authorization
-- ✅ User Management
+- ✅ User Management  
 - ✅ OTP Password Reset System
-- ✅ Workout Session Management
+- ✅ Workout Session Management (Individual Sessions)
 - ✅ Admin Functions
 - ✅ Cron Jobs & Email Services
 
@@ -21,8 +21,8 @@ npm run dev
 ```
 
 ### 2. Verify Server Status
-- **URL**: `GET http://localhost:3000/health`
-- **Expected**: `{"status": "OK", "message": "Gym Web API is running"}`
+- **URL**: `GET http://localhost:3000/api/health`
+- **Expected**: `{"status": "OK", "message": "Gym Web Backend API is running"}`
 
 ### 3. Testing Tools
 - **Postman**: Import collection or manually test
@@ -37,8 +37,8 @@ npm run dev
 **Endpoint**: `POST http://localhost:3000/api/auth/register`
 ```json
 {
-    "name": "Test User",
-    "email": "testuser@example.com",
+    "name": "Test Client",
+    "email": "testclient@example.com",
     "password": "TestPassword123!",
     "phone": "0123456789",
     "dateOfBirth": "1990-01-01",
@@ -46,557 +46,608 @@ npm run dev
 }
 ```
 **Expected**: Status 201, user created with JWT token
-**Note**: User status will be "PENDING" - needs admin approval
+**Note**: User status will be "pending" - needs admin approval
 
-### TEST 1.5: Approve User (Required for Testing)
-**Method**: Run approval script
-```bash
-node approve_user.js testuser@example.com
+### TEST 2: Admin Registration
+**Endpoint**: `POST http://localhost:3000/api/auth/register`
+```json
+{
+    "name": "Test Admin",
+    "email": "testadmin@example.com", 
+    "password": "AdminPassword123!",
+    "phone": "0987654321",
+    "dateOfBirth": "1985-01-01",
+    "gender": "female",
+    "role": "admin"
+}
 ```
-**Expected**: User status changed to "ACTIVE"
-**⚠️ NOTE**: User status will be 'pending' and requires admin approval before login
+**Expected**: Status 201, admin created with JWT token
 
-### TEST 2: User Login (After Admin Approval)
-**⚠️ IMPORTANT**: New users have `status: 'pending'` and cannot login until admin approval.
-
-**Step 2A: Manual Admin Approval (Required)**
-```javascript
-// Connect to MongoDB and approve the user
-// Option 1: MongoDB Compass/Shell
-db.users.updateOne(
-    { email: "testuser@example.com" },
-    { $set: { status: "approved" } }
-)
-
-// Option 2: Database admin panel
-// Set user status from 'pending' to 'approved'
-```
-
-**Step 2B: Login After Approval**
+### TEST 3: User Login
 **Endpoint**: `POST http://localhost:3000/api/auth/login`
 ```json
 {
-    "email": "testuser@example.com",
+    "email": "testclient@example.com",
     "password": "TestPassword123!"
 }
 ```
 **Expected**: Status 200, JWT token returned
-**Save**: `accessToken` for subsequent requests
+**Save the token as**: `{clientAccessToken}`
 
-### TEST 2C: Test Pending User Login (Should Fail)
-**Endpoint**: `POST http://localhost:3000/api/auth/login`
-**Test with a user that hasn't been approved**
-```json
-{
-    "email": "pendinguser@example.com", 
-    "password": "TestPassword123!"
-}
-```
-**Expected**: Status 403, "Your account is pending admin approval"
-
-### TEST 3: Token Validation
-**Endpoint**: `GET http://localhost:3000/api/auth/profile`
-**Headers**: `Authorization: Bearer {accessToken}`
-**Expected**: Status 200, user profile returned
-
----
-
-## 🔑 OTP PASSWORD RESET TESTING
-
-### TEST 4: Request Password Reset OTP
-**Endpoint**: `POST http://localhost:3000/api/auth/forgot-password`
-```json
-{
-    "email": "testuser@example.com"
-}
-```
-**Expected**: 
-- Status 200
-- Message: "OTP sent to email"
-- Check email for 6-digit OTP
-- **Save**: OTP code from email
-
-### TEST 5: Reset Password with OTP
-**Endpoint**: `POST http://localhost:3000/api/auth/reset-password`
-```json
-{
-    "email": "testuser@example.com",
-    "otp": "123456",
-    "newPassword": "NewPassword123!"
-}
-```
-**Expected**: Status 200, password reset success
-
-### TEST 6: Login with New Password
+### TEST 4: Admin Login
 **Endpoint**: `POST http://localhost:3000/api/auth/login`
 ```json
 {
-    "email": "testuser@example.com",
-    "password": "NewPassword123!"
+    "email": "testadmin@example.com",
+    "password": "AdminPassword123!"
 }
 ```
-**Expected**: Status 200, successful login
-
-### TEST 7: Invalid OTP Testing
-**Endpoint**: `POST http://localhost:3000/api/auth/reset-password`
-```json
-{
-    "email": "testuser@example.com",
-    "otp": "000000",
-    "newPassword": "AnotherPassword123!"
-}
-```
-**Expected**: Status 400, "Invalid or expired OTP"
+**Expected**: Status 200, JWT token returned
+**Save the token as**: `{adminAccessToken}`
 
 ---
 
 ## 👥 USER MANAGEMENT TESTING
 
-### TEST 8: Update User Profile
+### TEST 5: Get User Profile
+**Endpoint**: `GET http://localhost:3000/api/auth/profile`
+**Headers**: `Authorization: Bearer {clientAccessToken}`
+**Expected**: Status 200, user profile data
+
+### TEST 6: Update User Profile  
 **Endpoint**: `PUT http://localhost:3000/api/users/profile`
-**Headers**: `Authorization: Bearer {accessToken}`
+**Headers**: `Authorization: Bearer {clientAccessToken}`
 ```json
 {
-    "name": "Updated Test User",
-    "phone": "0987654321",
-    "dateOfBirth": "1992-06-15"
+    "name": "Updated Client Name",
+    "phone": "0111222333"
 }
 ```
 **Expected**: Status 200, profile updated
 
-### TEST 9: Change Password
-**Endpoint**: `PUT http://localhost:3000/api/users/change-password`
-**Headers**: `Authorization: Bearer {accessToken}`
-```json
+---
+
+## 👑 ADMIN USER MANAGEMENT WORKFLOW
+
+### 🔄 COMPLETE ADMIN WORKFLOW FOR USER APPROVAL
+
+**Step 1: Admin checks for pending users**
+```bash
+GET http://localhost:3000/api/auth/pending-users
+Headers: Authorization: Bearer {adminAccessToken}
+```
+**Response**: List of users with status "pending"
+
+**Step 2: Admin reviews user details**
+```bash
+GET http://localhost:3000/api/auth/users
+Headers: Authorization: Bearer {adminAccessToken}
+```
+**Response**: Complete list of all users with their details
+
+**Step 3: Admin approves a user**
+```bash
+PUT http://localhost:3000/api/auth/users/status
+Headers: Authorization: Bearer {adminAccessToken}
+Content-Type: application/json
+
 {
-    "currentPassword": "NewPassword123!",
-    "newPassword": "FinalPassword123!"
+    "userId": "64f1c2e8a1234567890abcde",
+    "status": "approved"
 }
 ```
-**Expected**: Status 200, password changed
+**Response**: `{ "success": true, "message": "User status updated to approved" }`
+
+**Step 4: Admin rejects a user (if needed)**
+```bash
+PUT http://localhost:3000/api/auth/users/status
+Headers: Authorization: Bearer {adminAccessToken}
+Content-Type: application/json
+
+{
+    "userId": "64f1c2e8a1234567890abcde", 
+    "status": "rejected"
+}
+```
+**Response**: `{ "success": true, "message": "User status updated to rejected" }`
+
+### 📋 ADMIN DAILY TASKS CHECKLIST
+- [ ] Check pending users: `GET /api/auth/pending-users`
+- [ ] Review user profiles: `GET /api/auth/users`
+- [ ] Approve legitimate users: `PUT /api/auth/users/status` (approved)
+- [ ] Reject suspicious users: `PUT /api/auth/users/status` (rejected)
+- [ ] Monitor gym sessions: `GET /api/workout-sessions/admin/all`
+- [ ] Handle user complaints (delete problematic sessions if needed)
+
+### 🛠️ ADMIN TOOLS & SHORTCUTS
+
+**Quick approve multiple users** (use in Postman/script):
+```javascript
+// Get all pending users first
+const pendingUsers = await fetch('/api/auth/pending-users', {
+    headers: { 'Authorization': 'Bearer ' + adminToken }
+});
+
+// Approve each user
+for (let user of pendingUsers.data) {
+    await fetch('/api/auth/users/status', {
+        method: 'PUT',
+        headers: { 
+            'Authorization': 'Bearer ' + adminToken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            userId: user._id,
+            status: 'approved'
+        })
+    });
+}
+```
+
+**Batch operations for user management:**
+1. **Filter users by status**: `GET /api/auth/users?status=pending`
+2. **Get user count**: Check array length in response
+3. **Bulk approve**: Use loop or batch API calls
+
+### 🚨 ADMIN SECURITY NOTES
+- ⚠️ **Never approve users without verification**
+- ⚠️ **Admin cannot change other admin status** (protection built-in)
+- ⚠️ **Always use proper authentication headers**
+- ⚠️ **Monitor rejected users for suspicious activity**
+- ⚠️ **Regular cleanup of old rejected user accounts**
+
+### 🔧 TROUBLESHOOTING ADMIN OPERATIONS
+
+**Problem**: "Cannot update admin status"
+**Solution**: Admin users cannot have their status changed by other admins
+
+**Problem**: "User not found"
+**Solution**: Verify the userId is correct and user exists in database
+
+**Problem**: "Access denied"
+**Solution**: Ensure you're using admin token, not client token
+
+**Problem**: Too many pending users
+**Solution**: Set up email notifications for new registrations
 
 ---
 
-## 🏋️ WORKOUT SESSION TESTING
+## 👑 ADMIN FUNCTIONS TESTING
 
-### TEST 10: Create Personal Workout Session
-**Note**: User must be APPROVED first (run approve_user.js)
-**Endpoint**: `POST http://localhost:3000/api/workout-sessions`
-**Headers**: `Authorization: Bearer {accessToken}`
+### TEST 7: Get All Users (Admin Only)
+**Endpoint**: `GET http://localhost:3000/api/auth/users`
+**Headers**: `Authorization: Bearer {adminAccessToken}`
+**Expected**: Status 200, list of all users
+
+### TEST 8: Get Pending Users (Admin Only)
+**Endpoint**: `GET http://localhost:3000/api/auth/pending-users`
+**Headers**: `Authorization: Bearer {adminAccessToken}`
+**Expected**: Status 200, list of pending approval users
+
+### TEST 9: Approve User (Admin Only)
+**Endpoint**: `PUT http://localhost:3000/api/auth/users/status`
+**Headers**: `Authorization: Bearer {adminAccessToken}`
 ```json
 {
-    "notes": "Personal cardio and strength training",
+    "userId": "{clientUserId}",
+    "status": "approved"
+}
+```
+**Expected**: Status 200, user approved
+
+### TEST 10: Reject User (Admin Only)
+**Endpoint**: `PUT http://localhost:3000/api/auth/users/status`
+**Headers**: `Authorization: Bearer {adminAccessToken}`
+```json
+{
+    "userId": "{clientUserId}",
+    "status": "rejected"
+}
+```
+**Expected**: Status 200, user rejected
+
+---
+
+## 🔑 PASSWORD RESET TESTING
+
+### TEST 11: Request Password Reset
+**Endpoint**: `POST http://localhost:3000/api/auth/forgot-password`
+```json
+{
+    "email": "testclient@example.com"
+}
+```
+**Expected**: Status 200, OTP sent to email
+**Check email for OTP code**
+
+### TEST 12: Verify OTP
+**Endpoint**: `POST http://localhost:3000/api/auth/verify-otp`
+```json
+{
+    "email": "testclient@example.com",
+    "otp": "123456"
+}
+```
+**Expected**: Status 200, OTP verified
+**Save the reset token**: `{resetToken}`
+
+### TEST 13: Reset Password
+**Endpoint**: `POST http://localhost:3000/api/auth/reset-password`
+**Headers**: `Authorization: Bearer {resetToken}`
+```json
+{
+    "newPassword": "NewPassword123!"
+}
+```
+**Expected**: Status 200, password reset successful
+
+### TEST 14: Login with New Password
+**Endpoint**: `POST http://localhost:3000/api/auth/login`
+```json
+{
+    "email": "testclient@example.com",
+    "password": "NewPassword123!"
+}
+```
+**Expected**: Status 200, login successful with new password
+
+---
+
+## 💪 WORKOUT SESSION MANAGEMENT TESTING
+
+**Note**: Each session is for 1 person only, with max 8 overlapping sessions in the gym
+
+### TEST 15: Create Workout Session (Client)
+**Endpoint**: `POST http://localhost:3000/api/workout-sessions`
+**Headers**: `Authorization: Bearer {clientAccessToken}`
+```json
+{
+    "notes": "Morning cardio session",
     "startTime": "2025-08-30T08:00:00.000Z",
     "endTime": "2025-08-30T09:00:00.000Z"
 }
 ```
-**Expected**: Status 201, session created for 1 person
-**Business Rule**: Max 8 overlapping sessions allowed
-**Save**: `sessionId`
+**Expected**: Status 201, session created
+**Save session ID**: `{sessionId1}`
 
-### TEST 11: Create Another Overlapping Session (Test Capacity)
+### TEST 16: Create Multiple Sessions (Test Capacity)
+**Create 8 overlapping sessions to test capacity limit**
 **Endpoint**: `POST http://localhost:3000/api/workout-sessions`
-**Headers**: `Authorization: Bearer {accessToken}`
+**Headers**: `Authorization: Bearer {clientAccessToken}`
 ```json
 {
-    "notes": "Weight lifting session",
+    "notes": "Test session 2",
     "startTime": "2025-08-30T08:30:00.000Z",
     "endTime": "2025-08-30T09:30:00.000Z"
 }
 ```
-**Expected**: Status 201, overlapping session allowed (under 8 capacity)
+**Expected**: First 8 sessions should succeed, 9th should fail with capacity error
 
-### TEST 12: Get All Sessions (Public View)
+### TEST 17: Get All Sessions (Client can view all)
 **Endpoint**: `GET http://localhost:3000/api/workout-sessions`
-**Headers**: `Authorization: Bearer {accessToken}`
-**Expected**: Status 200, list of ALL workout sessions from all users
-**Note**: Clients can see all sessions (to know gym schedule) but can only modify their own
+**Headers**: `Authorization: Bearer {clientAccessToken}`
+**Expected**: Status 200, list of all gym sessions
 
-### TEST 12.1: Verify Session Ownership
-**Check the response contains sessions from different users:**
+### TEST 18: Get Sessions with Filters
+**Endpoint**: `GET http://localhost:3000/api/workout-sessions?startDate=2025-08-30&endDate=2025-08-31`
+**Headers**: `Authorization: Bearer {clientAccessToken}`
+**Expected**: Status 200, filtered sessions
+
+### TEST 19: Update Own Session (Client)
+**Endpoint**: `PUT http://localhost:3000/api/workout-sessions/{sessionId1}`
+**Headers**: `Authorization: Bearer {clientAccessToken}`
 ```json
 {
-    "sessions": [
-        {
-            "id": "session1",
-            "clientId": "user1_id",
-            "clientName": "User One",
-            "notes": "User 1's session",
-            "startTime": "2025-08-30T08:00:00.000Z"
-        },
-        {
-            "id": "session2", 
-            "clientId": "user2_id",
-            "clientName": "User Two",
-            "notes": "User 2's session",
-            "startTime": "2025-08-30T08:30:00.000Z"
-        }
-    ]
+    "notes": "Updated morning cardio session",
+    "startTime": "2025-08-30T08:15:00.000Z",
+    "endTime": "2025-08-30T09:15:00.000Z"
 }
 ```
+**Expected**: Status 200, session updated
 
-### TEST 13: Update Own Session (Should Work)
-**Endpoint**: `PUT http://localhost:3000/api/workout-sessions/{ownSessionId}`
-**Headers**: `Authorization: Bearer {accessToken}`
-```json
-{
-    "notes": "Updated: Full body workout",
-    "startTime": "2025-08-30T09:00:00.000Z",
-    "endTime": "2025-08-30T10:00:00.000Z"
-}
-```
-**Expected**: Status 200, session updated successfully
-
-### TEST 13.1: Try Update Other's Session (Should Fail)
+### TEST 20: Try Update Other's Session (Should Fail)
 **Endpoint**: `PUT http://localhost:3000/api/workout-sessions/{otherUserSessionId}`
-**Headers**: `Authorization: Bearer {accessToken}`
+**Headers**: `Authorization: Bearer {clientAccessToken}`
 ```json
 {
-    "notes": "Trying to hack someone's session",
+    "notes": "Trying to update other's session"
+}
+```
+**Expected**: Status 403, access denied
+
+### TEST 21: Delete Own Session (Client)
+**Endpoint**: `DELETE http://localhost:3000/api/workout-sessions/{sessionId1}`
+**Headers**: `Authorization: Bearer {clientAccessToken}`
+**Expected**: Status 200, session deleted
+
+### TEST 22: Try Delete Other's Session (Should Fail)
+**Endpoint**: `DELETE http://localhost:3000/api/workout-sessions/{otherUserSessionId}`
+**Headers**: `Authorization: Bearer {clientAccessToken}`
+**Expected**: Status 403, access denied
+
+---
+
+## 👑 ADMIN SESSION MANAGEMENT TESTING
+
+### TEST 23: Get All Sessions (Admin)
+**Endpoint**: `GET http://localhost:3000/api/workout-sessions/admin/all`
+**Headers**: `Authorization: Bearer {adminAccessToken}`
+**Expected**: Status 200, all sessions with admin view
+
+### TEST 24: Get Sessions by Client (Admin)
+**Endpoint**: `GET http://localhost:3000/api/workout-sessions/client/{clientUserId}`
+**Headers**: `Authorization: Bearer {adminAccessToken}`
+**Expected**: Status 200, all sessions for specific client
+
+### TEST 25: Delete Any Session (Admin)
+**Endpoint**: `DELETE http://localhost:3000/api/workout-sessions/{anySessionId}`
+**Headers**: `Authorization: Bearer {adminAccessToken}`
+**Expected**: Status 200, session deleted (admin can delete any session)
+
+---
+
+## 🚫 AUTHORIZATION TESTING
+
+### TEST 26: Access Admin Endpoint as Client (Should Fail)
+**Endpoint**: `GET http://localhost:3000/api/auth/users`
+**Headers**: `Authorization: Bearer {clientAccessToken}`
+**Expected**: Status 403, access denied
+
+### TEST 27: Access Protected Endpoint Without Token (Should Fail)
+**Endpoint**: `GET http://localhost:3000/api/workout-sessions`
+**Headers**: None
+**Expected**: Status 401, authentication required
+
+### TEST 28: Access with Invalid Token (Should Fail)
+**Endpoint**: `GET http://localhost:3000/api/workout-sessions`
+**Headers**: `Authorization: Bearer invalidtoken123`
+**Expected**: Status 401, invalid token
+
+### TEST 29: Access with Expired Token (Should Fail)
+**Note**: Wait for token to expire or use expired token
+**Endpoint**: `GET http://localhost:3000/api/workout-sessions`
+**Headers**: `Authorization: Bearer {expiredToken}`
+**Expected**: Status 401, token expired
+
+---
+
+## 🔄 EDGE CASES & ERROR TESTING
+
+### TEST 30: Register with Existing Email
+**Endpoint**: `POST http://localhost:3000/api/auth/register`
+```json
+{
+    "name": "Duplicate User",
+    "email": "testclient@example.com",
+    "password": "TestPassword123!"
+}
+```
+**Expected**: Status 409, email already exists
+
+### TEST 31: Login with Invalid Credentials
+**Endpoint**: `POST http://localhost:3000/api/auth/login`
+```json
+{
+    "email": "testclient@example.com",
+    "password": "wrongpassword"
+}
+```
+**Expected**: Status 401, invalid credentials
+
+### TEST 32: Create Session with Invalid Time
+**Endpoint**: `POST http://localhost:3000/api/workout-sessions`
+**Headers**: `Authorization: Bearer {clientAccessToken}`
+```json
+{
+    "notes": "Invalid time session",
     "startTime": "2025-08-30T10:00:00.000Z",
-    "endTime": "2025-08-30T11:00:00.000Z"
+    "endTime": "2025-08-30T09:00:00.000Z"
 }
 ```
-**Expected**: Status 403 or 404, "Unauthorized" or "Session not found"
+**Expected**: Status 400, end time before start time
 
-### TEST 14: Client Delete Own Session (Should Work)
-**Endpoint**: `DELETE http://localhost:3000/api/workout-sessions/{ownSessionId}/client`
-**Headers**: `Authorization: Bearer {accessToken}`
-**Expected**: Status 200, session deleted with email notification
-
-### TEST 14.1: Try Delete Other's Session (Should Fail)
-**Endpoint**: `DELETE http://localhost:3000/api/workout-sessions/{otherUserSessionId}/client`
-**Headers**: `Authorization: Bearer {accessToken}`
-**Expected**: Status 403 or 404, "Unauthorized" or "Session not found"
-
-### TEST 15: Test Gym Capacity Limit (Create 8+ Sessions)
-**Create 8 sessions at same time to test capacity:**
-**Endpoint**: `POST http://localhost:3000/api/workout-sessions` (repeat 8 times)
-```json
-{
-    "notes": "Session #X",
-    "startTime": "2025-08-30T14:00:00.000Z",
-    "endTime": "2025-08-30T15:00:00.000Z"
-}
-```
-**Expected**: First 8 sessions succeed, 9th session fails with capacity error
-
-### TEST 16: Admin Delete Session
-**Note**: Need admin user for this test
-**Endpoint**: `DELETE http://localhost:3000/api/workout-sessions/{sessionId}/admin`
-**Headers**: `Authorization: Bearer {adminAccessToken}`
-```json
-{
-    "reason": "Gym equipment maintenance required"
-}
-```
-**Expected**: Status 200, session deleted with email to client
-
----
-
-## 👑 ADMIN AUTHORIZATION TESTING
-
-### TEST 17: Admin User Creation
-**Create admin user manually in database or promote existing user**
-```bash
-# Method 1: Create admin via registration then promote
-POST /api/auth/register (create admin user)
-
-# Method 2: Promote existing user in MongoDB
-node approve_user.js admin@example.com
-# Then manually update role in database:
-# db.users.updateOne({email: "admin@example.com"}, {$set: {role: "admin"}})
-```
-
-### TEST 18: Admin-Only Endpoint Access
-**Endpoint**: `GET http://localhost:3000/api/admin/users`
-**Headers**: `Authorization: Bearer {adminAccessToken}`
-**Expected**: Status 200, list of all users
-
-### TEST 19: Client Access Admin Endpoint (Should Fail)
-**Endpoint**: `GET http://localhost:3000/api/admin/users`
+### TEST 33: Create Session in the Past
+**Endpoint**: `POST http://localhost:3000/api/workout-sessions`
 **Headers**: `Authorization: Bearer {clientAccessToken}`
-**Expected**: Status 403, "Insufficient permissions"
-
-### TEST 16: Admin User Management
-**Get pending users and approve them**
-**Endpoint**: `GET http://localhost:3000/api/admin/users?status=pending`
-**Headers**: `Authorization: Bearer {adminAccessToken}`
-**Expected**: Status 200, list of pending users
-
-**Approve User (Manual Database Update)**
-```javascript
-// MongoDB command to approve user
-db.users.updateOne(
-    { email: "pendinguser@example.com" },
-    { $set: { status: "approved" } }
-)
-```
-
-### TEST 17: Admin-Only Endpoint Access
-**Endpoint**: `GET http://localhost:3000/api/admin/users`
-**Headers**: `Authorization: Bearer {adminAccessToken}`
-**Expected**: Status 200, list of all users
-
-### TEST 18: Client Access Admin Endpoint (Should Fail)
-**Endpoint**: `GET http://localhost:3000/api/admin/users`
-**Headers**: `Authorization: Bearer {clientAccessToken}`
-**Expected**: Status 403, "Insufficient permissions"
-
----
-
-## 📧 EMAIL SERVICE TESTING
-
-### TEST 18: Email Configuration Verification
-Check server logs for:
-```
-✅ Email configuration verified successfully
-```
-If error appears, configure email credentials in `.env`
-
-### TEST 19: OTP Email Delivery Test
-1. Request password reset (TEST 4)
-2. Check email inbox for OTP
-3. Verify email content and formatting
-
-### TEST 20: Session Cancellation Email Test
-1. Book a session
-2. Delete session as admin with reason
-3. Check all participants receive cancellation email
-
----
-
-## ⏰ CRON JOB TESTING
-
-### TEST 21: OTP Cleanup Job Verification
-1. Create multiple OTPs by requesting password reset
-2. Wait 6+ minutes (OTP expires in 5 minutes)
-3. Check server logs for:
-```
-[CRON] Cleaned X expired OTP records
-```
-
-### TEST 22: Manual Cron Job Trigger (Optional)
-```javascript
-// MongoDB command to check expired OTPs
-db.otps.find({})
-
-// Should show OTPs with expireAt field
-// After 5+ minutes, expired ones should be auto-deleted
-```
-
----
-
-## 🛡️ SECURITY & ERROR HANDLING TESTING
-
-### TEST 23: Rate Limiting
-Make 100+ rapid requests to any endpoint
-**Expected**: Status 429, "Too many requests"
-
-### TEST 24: Invalid Token
-**Endpoint**: Any protected endpoint
-**Headers**: `Authorization: Bearer invalid_token`
-**Expected**: Status 401, "Invalid token"
-
-### TEST 25: Expired Token Testing
-1. Use token after expiration time
-2. **Expected**: Status 401, "Token expired"
-
-### TEST 26: SQL Injection Prevention
-Try malicious payloads in request bodies:
 ```json
 {
-    "email": "test@example.com'; DROP TABLE users; --",
-    "password": "password"
+    "notes": "Past session",
+    "startTime": "2024-01-01T10:00:00.000Z",
+    "endTime": "2024-01-01T11:00:00.000Z"
 }
 ```
-**Expected**: Proper validation, no database corruption
+**Expected**: Status 400, cannot create session in the past
 
 ---
 
-## 📊 DATABASE VALIDATION TESTING
+## 📊 DATA VALIDATION TESTING
 
-### TEST 27: MongoDB Connection Verification
-Check server logs for:
+### TEST 34: Register with Invalid Email Format
+**Endpoint**: `POST http://localhost:3000/api/auth/register`
+```json
+{
+    "name": "Test User",
+    "email": "invalid-email",
+    "password": "TestPassword123!"
+}
 ```
-MongoDB connected successfully: gymweb.fazh7yk.mongodb.net
-```
+**Expected**: Status 400, invalid email format
 
-### TEST 28: Database Indexes Verification
-```javascript
-// MongoDB commands
-db.otps.getIndexes()  // Should show TTL index on expireAt
-db.users.getIndexes() // Should show unique index on email
+### TEST 35: Register with Weak Password
+**Endpoint**: `POST http://localhost:3000/api/auth/register`
+```json
+{
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "123"
+}
 ```
+**Expected**: Status 400, password too weak
+
+### TEST 36: Create Session with Missing Fields
+**Endpoint**: `POST http://localhost:3000/api/workout-sessions`
+**Headers**: `Authorization: Bearer {clientAccessToken}`
+```json
+{
+    "notes": "Missing time fields"
+}
+```
+**Expected**: Status 400, missing required fields
 
 ---
 
-## 🔄 INTEGRATION TESTING
+## 🎯 BUSINESS LOGIC TESTING
 
-### TEST 29: Complete User Journey
-1. Register new user
-2. Login
-3. Request password reset
-4. Reset password with OTP
-5. Login with new password
-6. Book workout session
-7. Cancel session
-8. Update profile
-9. Change password
+### TEST 37: Gym Capacity Enforcement
+1. Create 8 overlapping sessions from different users
+2. Try to create 9th overlapping session
+**Expected**: 9th session should fail with capacity exceeded error
 
-### TEST 30: Admin Workflow
-1. Login as admin
-2. Create workout session
-3. View all users
-4. Delete session with email notification
-5. Check email delivery
+### TEST 38: Session Ownership Validation
+1. User A creates a session
+2. User B tries to modify User A's session
+**Expected**: User B should get access denied
+
+### TEST 39: Time Conflict Validation
+1. Create a session from 10:00-11:00
+2. Try to create another session from 10:30-11:30 (same user)
+**Expected**: Should succeed (user can have multiple sessions)
+
+### TEST 40: Admin Override Capabilities
+1. Admin should be able to:
+   - View all sessions
+   - Delete any session
+   - Access all admin endpoints
+**Expected**: All admin operations should succeed
 
 ---
 
-## 🚨 ERROR SCENARIOS TESTING
+## 🕒 CRON JOB TESTING
 
-### Common Error Tests:
-- **400 Bad Request**: Invalid request data
-- **401 Unauthorized**: Missing/invalid token
-- **403 Forbidden**: Insufficient permissions
-- **404 Not Found**: Non-existent resources
-- **409 Conflict**: Duplicate email registration
-- **422 Validation Error**: Invalid input format
-- **500 Internal Server Error**: Server issues
+### TEST 41: Session Cleanup Job
+**Manual trigger**: Check if expired sessions are cleaned up
+**Check**: Database should remove old sessions automatically
+
+### TEST 42: Email Notification Job  
+**Manual trigger**: Check if reminder emails are sent
+**Check**: Users should receive session reminders
 
 ---
 
 ## 📈 PERFORMANCE TESTING
 
-### Load Testing Suggestions:
-1. **Concurrent Users**: 50-100 simultaneous requests
-2. **Database Performance**: Query response times
-3. **Email Delivery**: Bulk email sending
-4. **Cron Job Efficiency**: Large dataset cleanup
+### TEST 43: Load Testing - Multiple Sessions
+Create 50+ sessions concurrently to test:
+- Database performance
+- Server response time
+- Memory usage
+
+### TEST 44: Concurrent User Testing
+Simulate multiple users:
+- Creating sessions simultaneously
+- Accessing different endpoints
+- Testing race conditions
 
 ---
 
-## ✅ TESTING CHECKLIST
+## 📝 TESTING CHECKLIST
 
-### Pre-Testing Setup:
-- [ ] Server running on port 3000
-- [ ] MongoDB connected successfully
-- [ ] Email configuration verified
-- [ ] Environment variables loaded
+### Authentication ✅
+- [x] User registration
+- [x] Admin registration  
+- [x] User login
+- [x] Admin login
+- [x] Token validation
+- [x] Password reset flow
 
-### Authentication & Authorization:
-- [ ] User registration works
-- [ ] User login returns valid token
-- [ ] Token validation works
-- [ ] Admin role checking works
-- [ ] Permission boundaries respected
+### User Management ✅
+- [x] Profile retrieval
+- [x] Profile updates
+- [x] Admin user management
+- [x] User approval/rejection
 
-### OTP System:
-- [ ] OTP generation and email delivery
-- [ ] OTP validation and password reset
-- [ ] OTP expiration (5 minutes)
-- [ ] Invalid OTP rejection
-- [ ] Cron job cleanup working
+### Workout Sessions ✅
+- [x] Session creation
+- [x] Session listing
+- [x] Session updates (own only)
+- [x] Session deletion (own only)
+- [x] Admin session management
+- [x] Gym capacity validation
 
-### Session Management:
-- [ ] Session creation (admin)
-- [ ] Session booking (client)
-- [ ] Client self-deletion
-- [ ] Admin deletion with notifications
-- [ ] Email notifications working
+### Authorization ✅
+- [x] Role-based access control
+- [x] JWT token verification
+- [x] Admin-only endpoints
+- [x] Client ownership validation
 
-### Security:
-- [ ] Rate limiting active
-- [ ] Input validation working
-- [ ] SQL injection prevention
-- [ ] XSS protection
-- [ ] CORS configured properly
-
-### Database & Infrastructure:
-- [ ] MongoDB connections stable
-- [ ] TTL indexes working
-- [ ] Data persistence verified
-- [ ] Backup/restore procedures
+### Error Handling ✅
+- [x] Invalid input validation
+- [x] Authentication errors
+- [x] Authorization errors
+- [x] Business logic errors
 
 ---
 
-## 🔧 TROUBLESHOOTING
+## 🚀 QUICK TEST SEQUENCE
 
-### Common Issues:
-1. **MongoDB Connection**: Check connection string and network
-2. **Email Delivery**: Verify SMTP credentials and settings
-3. **Token Issues**: Check JWT secret and expiration
-4. **Permission Errors**: Verify user roles in database
-5. **OTP Problems**: Check email delivery and TTL settings
+### For Development Testing:
+1. Start server: `npm run dev`
+2. Register admin user (TEST 2)
+3. Register client user (TEST 1) 
+4. Login as admin (TEST 4)
+5. Approve client user (TEST 9)
+6. Login as client (TEST 3)
+7. Create workout session (TEST 15)
+8. Test session management (TEST 17-21)
 
-### Debug Commands:
-```bash
-# Check server logs
-npm run dev
-
-# MongoDB connection test
-mongosh "mongodb+srv://..."
-
-# Email service test
-node -e "console.log(process.env.EMAIL_HOST)"
-```
+### For Production Testing:
+1. Run all authentication tests (1-4)
+2. Run all authorization tests (26-29)
+3. Run all business logic tests (37-40)
+4. Run edge case tests (30-36)
+5. Verify all endpoints return expected responses
 
 ---
 
-## 📝 TEST RESULTS TEMPLATE
+## 🏁 FINAL NOTES & CORRECT URLs
 
-```
-=== COMPREHENSIVE API TESTING RESULTS ===
-Date: [DATE]
-Tester: [NAME]
-Environment: [DEV/STAGING/PROD]
+### ✅ CORRECT API ENDPOINTS:
 
-AUTHENTICATION TESTS:
-- Registration: [PASS/FAIL]
-- Login: [PASS/FAIL]
-- Token validation: [PASS/FAIL]
-- Password reset: [PASS/FAIL]
+#### Authentication:
+- Register: `POST http://localhost:3000/api/auth/register`
+- Login: `POST http://localhost:3000/api/auth/login`
+- Profile: `GET http://localhost:3000/api/auth/profile`
+- Forgot Password: `POST http://localhost:3000/api/auth/forgot-password`
+- Verify OTP: `POST http://localhost:3000/api/auth/verify-otp`
+- Reset Password: `POST http://localhost:3000/api/auth/reset-password`
 
-OTP SYSTEM TESTS:
-- OTP generation: [PASS/FAIL]
-- Email delivery: [PASS/FAIL]
-- OTP validation: [PASS/FAIL]
-- Expiration cleanup: [PASS/FAIL]
+#### Admin Functions:
+- **Get All Users**: `GET http://localhost:3000/api/auth/users`
+- **Get Pending Users**: `GET http://localhost:3000/api/auth/pending-users`  
+- **Update User Status**: `PUT http://localhost:3000/api/auth/users/status`
 
-SESSION MANAGEMENT TESTS:
-- Session creation: [PASS/FAIL]
-- Client booking: [PASS/FAIL]
-- Client deletion: [PASS/FAIL]
-- Admin deletion: [PASS/FAIL]
+#### User Management:
+- Update Profile: `PUT http://localhost:3000/api/users/profile`
 
-AUTHORIZATION TESTS:
-- Admin access: [PASS/FAIL]
-- Permission boundaries: [PASS/FAIL]
-- Role validation: [PASS/FAIL]
+#### Workout Sessions:
+- Create Session: `POST http://localhost:3000/api/workout-sessions`
+- Get Sessions: `GET http://localhost:3000/api/workout-sessions`
+- Update Session: `PUT http://localhost:3000/api/workout-sessions/{id}`
+- Delete Session: `DELETE http://localhost:3000/api/workout-sessions/{id}`
+- Get Client Sessions (Admin): `GET http://localhost:3000/api/workout-sessions/client/{clientId}`
+- Get All Sessions (Admin): `GET http://localhost:3000/api/workout-sessions/admin/all`
 
-SECURITY TESTS:
-- Rate limiting: [PASS/FAIL]
-- Input validation: [PASS/FAIL]
-- Token security: [PASS/FAIL]
-
-OVERALL STATUS: [PASS/FAIL]
-NOTES: [Any issues or observations]
-```
+#### System:
+- Health Check: `GET http://localhost:3000/api/health`
 
 ---
 
-## 🎯 SUCCESS CRITERIA
+### 🔧 Important Configuration:
+- **Base URL**: `http://localhost:3000/api`
+- **Content-Type**: `application/json` for all POST/PUT requests
+- **Authentication**: Use `Authorization: Bearer {token}` header
+- **Session Logic**: Individual sessions (1 person each), max 8 overlapping
+- **Business Rules**: Clients can view all sessions but only modify their own
+- **Admin Powers**: Full access to all sessions and user management
 
-**ALL SYSTEMS OPERATIONAL WHEN:**
-- ✅ All authentication flows work smoothly
-- ✅ OTP system sends emails and validates correctly
-- ✅ Session management respects business rules
-- ✅ Authorization boundaries are enforced
-- ✅ Email notifications deliver reliably
-- ✅ Cron jobs clean up expired data
-- ✅ Database connections remain stable
-- ✅ Security measures prevent attacks
-- ✅ Error handling provides clear feedback
-- ✅ Performance meets acceptable standards
-
-**🎉 CONGRATULATIONS! Your Gym Web Backend is production-ready when all tests pass! 🎉**
+**Remember**: Replace `{clientAccessToken}`, `{adminAccessToken}`, `{sessionId}`, etc. with actual values from your test responses!
