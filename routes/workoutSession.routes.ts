@@ -33,7 +33,6 @@ router.post(
 router.get(
     '/',
     authMiddleware,
-    adminMiddleware,
     validateRequest(getWorkoutSessionsQuerySchema, 'query'),
     WorkoutSessionController.getWorkoutSessions
 );

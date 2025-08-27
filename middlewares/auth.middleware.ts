@@ -5,7 +5,14 @@ import { HttpResponse } from '../helpers/HttpResponse';
 import { StatusCode } from '../enums/statusCode.enums';
 
 const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    const authHeader = req.header('Authorization');
+    console.log('🔍 Auth Header:', JSON.stringify(authHeader));
+    
+    // Handle multiple spaces and trim properly
+    const token = authHeader?.replace(/Bearer\s+/, '').trim();
+    console.log('🔍 Extracted Token Length:', token?.length);
+    console.log('🔍 Extracted Token:', token?.substring(0, 50) + '...');
+    console.log('🔍 Token starts with:', token?.substring(0, 10));
 
     if (!token) {
         res.status(StatusCode.UNAUTHORIZED).json(
@@ -16,6 +23,8 @@ const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunc
 
     try {
         const decoded = decodeToken(token);
+        console.log('🔍 Decoded Token:', decoded);
+        
         if (!decoded) {
         res.status(StatusCode.UNAUTHORIZED).json(
             HttpResponse.unauthorized('Invalid token.')
@@ -27,6 +36,7 @@ const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunc
         next();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
+        console.error('🚨 Token Error:', error);
         res.status(StatusCode.UNAUTHORIZED).json(
         HttpResponse.unauthorized('Invalid token.')
         );

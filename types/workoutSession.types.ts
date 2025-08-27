@@ -6,8 +6,7 @@ import { AuthenticatedRequest } from './common.types';
 
 export interface CreateWorkoutSessionRequest extends AuthenticatedRequest {
     body: {
-        title: string;
-        description?: string;
+        notes?: string;
         startTime: string;
         endTime: string;
     };
@@ -15,11 +14,10 @@ export interface CreateWorkoutSessionRequest extends AuthenticatedRequest {
 
 export interface UpdateWorkoutSessionRequest extends AuthenticatedRequest {
     params: {
-        sessionId: string;
+        id: string;  // Changed from sessionId to id to match route
     };
     body: {
-        title?: string;
-        description?: string;
+        notes?: string;
         startTime?: string;
         endTime?: string;
     };
@@ -29,8 +27,7 @@ export interface WorkoutSessionResponse {
     id: string;
     clientId: string;
     clientName: string;
-    title: string;
-    description?: string;
+    notes?: string;
     startTime: Date;
     endTime: Date;
     status: string;

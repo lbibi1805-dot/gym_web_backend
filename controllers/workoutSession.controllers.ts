@@ -75,16 +75,25 @@ export class WorkoutSessionController {
         next: NextFunction
     ): Promise<void> {
         try {
+            console.log('🔍 Controller Debug:');
+            console.log('  req.user:', req.user);
+            console.log('  req.params:', req.params);
+            console.log('  req.body:', req.body);
+            
             const userId = validateAuthenticatedUser(req, res);
             if (!userId) return;
 
-            const { sessionId } = req.params;
-            const result = await WorkoutSessionService.updateWorkoutSession(sessionId, req.body, userId);
+            const { id } = req.params;
+            console.log('  sessionId from params:', id);
+            console.log('  userId from validation:', userId);
+            
+            const result = await WorkoutSessionService.updateWorkoutSession(id, req.body, userId);
 
             res.status(StatusCode.OK).json(
                 HttpResponse.success(result, 'Workout session updated successfully')
             );
         } catch (error) {
+            console.log('❌ Controller Error:', error);
             handleControllerError(error, res, next);
         }
     }

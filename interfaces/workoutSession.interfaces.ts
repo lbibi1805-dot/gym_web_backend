@@ -2,13 +2,13 @@ import { Document, Types } from 'mongoose';
 import { WorkoutSessionStatus } from '../enums/workoutSessionStatus.enums';
 
 /**
- * Interface for workout session in the gym system
+ * Interface for personal workout session bookings
+ * Each session = 1 person booking gym time
  */
 export interface WorkoutSessionInterface extends Document {
     _id: Types.ObjectId;
-    clientId: string;
-    title: string;
-    description?: string;
+    clientId: Types.ObjectId;
+    notes?: string;
     startTime: Date;
     endTime: Date;
     status: WorkoutSessionStatus;

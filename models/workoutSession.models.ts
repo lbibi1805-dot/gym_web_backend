@@ -5,27 +5,23 @@ import { WorkoutSessionStatus } from '../enums/workoutSessionStatus.enums';
 /**
  * Mongoose schema for workout sessions.
  * 
- * This schema defines the structure for workout session documents in MongoDB,
- * representing gym booking sessions with time constraints and user limitations.
+ * Each session represents ONE person booking gym time.
+ * Maximum 8 overlapping sessions allowed (gym capacity).
  */
 
 const workoutSessionSchema = new Schema<WorkoutSessionInterface>(
     {
         clientId: {
-            type: String,
+            type: Schema.Types.ObjectId,
             required: [true, 'Client ID is required'],
             ref: 'User',
         },
-        title: {
-            type: String,
-            required: [true, 'Title is required'],
-            trim: true,
-            maxlength: [200, 'Title cannot exceed 200 characters'],
-        },
-        description: {
+        // Personal session details (user can customize)
+        notes: {
             type: String,
             trim: true,
-            maxlength: [500, 'Description cannot exceed 500 characters'],
+            maxlength: [200, 'Notes cannot exceed 200 characters'],
+            default: 'Personal workout session'
         },
         startTime: {
             type: Date,

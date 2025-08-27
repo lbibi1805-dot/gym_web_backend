@@ -5,13 +5,8 @@ import Joi from 'joi';
  */
 
 export const createWorkoutSessionSchema = Joi.object({
-    title: Joi.string().min(3).max(200).required().messages({
-        'string.min': 'Title must be at least 3 characters long',
-        'string.max': 'Title cannot exceed 200 characters',
-        'any.required': 'Title is required'
-    }),
-    description: Joi.string().max(500).optional().messages({
-        'string.max': 'Description cannot exceed 500 characters'
+    notes: Joi.string().max(200).optional().messages({
+        'string.max': 'Notes cannot exceed 200 characters'
     }),
     startTime: Joi.date().iso().required().messages({
         'date.base': 'Start time must be a valid date',
@@ -25,12 +20,8 @@ export const createWorkoutSessionSchema = Joi.object({
 });
 
 export const updateWorkoutSessionSchema = Joi.object({
-    title: Joi.string().min(3).max(200).optional().messages({
-        'string.min': 'Title must be at least 3 characters long',
-        'string.max': 'Title cannot exceed 200 characters'
-    }),
-    description: Joi.string().max(500).optional().messages({
-        'string.max': 'Description cannot exceed 500 characters'
+    notes: Joi.string().max(200).optional().messages({
+        'string.max': 'Notes cannot exceed 200 characters'
     }),
     startTime: Joi.date().iso().optional().messages({
         'date.base': 'Start time must be a valid date'

@@ -15,19 +15,21 @@ export class WorkoutSessionService {
      */
     static async createWorkoutSession(
         clientId: string, 
-        sessionData: { title: string; description?: string; startTime: string; endTime: string; }
+        sessionData: { notes?: string; startTime: string; endTime: string; }
     ): Promise<WorkoutSessionResponse> {
         const startTime = new Date(sessionData.startTime);
         const endTime = new Date(sessionData.endTime);
         
         // Validate all business rules
         await validateWorkoutSessionCreation(clientId, startTime, endTime);
+        
+        // Check gym capacity (max 8 overlapping sessions)
+        await this.validateGymCapacity(startTime, endTime);
 
         // Create the session
         const newSession = new WorkoutSessionModel({
             clientId,
-            title: sessionData.title,
-            description: sessionData.description,
+            notes: sessionData.notes || 'Personal workout session',
             startTime,
             endTime,
             status: WorkoutSessionStatus.SCHEDULED
@@ -35,6 +37,40 @@ export class WorkoutSessionService {
 
         const savedSession = await newSession.save();
         return await this.getWorkoutSessionById(savedSession._id.toString());
+    }
+
+    /**
+     * Check if gym capacity allows new booking (max 8 overlapping sessions)
+     */
+    private static async validateGymCapacity(startTime: Date, endTime: Date): Promise<void> {
+        const overlappingSessions = await WorkoutSessionModel.countDocuments({
+            isDeleted: false,
+            status: { $ne: WorkoutSessionStatus.CANCELLED },
+            $or: [
+                {
+                    $and: [
+                        { startTime: { $lte: startTime } },
+                        { endTime: { $gt: startTime } }
+                    ]
+                },
+                {
+                    $and: [
+                        { startTime: { $lt: endTime } },
+                        { endTime: { $gte: endTime } }
+                    ]
+                },
+                {
+                    $and: [
+                        { startTime: { $gte: startTime } },
+                        { endTime: { $lte: endTime } }
+                    ]
+                }
+            ]
+        });
+
+        if (overlappingSessions >= 8) {
+            throw new Error('Gym is at full capacity for the selected time slot. Maximum 8 people can workout at the same time.');
+        }
     }
 
     /**
@@ -59,10 +95,9 @@ export class WorkoutSessionService {
         
         return {
             id: session._id.toString(),
-            clientId: session.clientId,
+            clientId: session.clientId.toString(),
             clientName: client?.name || 'Unknown Client',
-            title: session.title,
-            description: session.description,
+            notes: session.notes,
             startTime: session.startTime,
             endTime: session.endTime,
             status: session.status,
@@ -118,10 +153,9 @@ export class WorkoutSessionService {
                 const client = await UserModel.findById(session.clientId);
                 return {
                     id: session._id.toString(),
-                    clientId: session.clientId,
+                    clientId: session.clientId.toString(),
                     clientName: client?.name || 'Unknown Client',
-                    title: session.title,
-                    description: session.description,
+                    notes: session.notes,
                     startTime: session.startTime,
                     endTime: session.endTime,
                     status: session.status,
@@ -144,14 +178,22 @@ export class WorkoutSessionService {
      */
     static async updateWorkoutSession(
         sessionId: string, 
-        updateData: { title?: string; description?: string; startTime?: string; endTime?: string; },
+        updateData: { notes?: string; startTime?: string; endTime?: string; },
         clientId: string
     ): Promise<WorkoutSessionResponse> {
+        console.log('🔍 Update Session Debug:');
+        console.log('  sessionId:', sessionId, 'length:', sessionId.length);
+        console.log('  clientId:', clientId, 'length:', clientId.length);
+        console.log('  sessionId valid:', isValidObjectId(sessionId));
+        console.log('  clientId valid:', isValidObjectId(clientId));
+        
         // Validate ObjectIds
         if (!isValidObjectId(sessionId)) {
+            console.log('❌ Invalid session ID format:', sessionId);
             throw new Error('Invalid session ID format');
         }
         if (!isValidObjectId(clientId)) {
+            console.log('❌ Invalid client ID format:', clientId);
             throw new Error('Invalid client ID format');
         }
 
@@ -263,7 +305,7 @@ export class WorkoutSessionService {
                 await EmailService.sendSessionDeletionEmail(
                     client.email,
                     client.name,
-                    session.title,
+                    session.notes || 'Personal workout session',
                     sessionDate,
                     sessionTime,
                     'Session cancelled by gym administration'
@@ -316,10 +358,9 @@ export class WorkoutSessionService {
         
         return sessions.map(session => ({
             id: session._id.toString(),
-            clientId: session.clientId,
+            clientId: session.clientId.toString(),
             clientName: client?.name || 'Unknown Client',
-            title: session.title,
-            description: session.description,
+            notes: session.notes,
             startTime: session.startTime,
             endTime: session.endTime,
             status: session.status,

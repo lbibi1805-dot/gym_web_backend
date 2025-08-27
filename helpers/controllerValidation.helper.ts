@@ -12,21 +12,31 @@ import { StatusCode } from '../enums/statusCode.enums';
  * Compatible with both middleware auth types
  */
 export const validateAuthenticatedUser = (req: { user?: { id: string; status?: string; } }, res: Response): string | null => {
+    console.log('🔍 Validating authenticated user:');
+    console.log('  req.user exists:', !!req.user);
+    console.log('  req.user:', req.user);
+    
     if (!req.user) {
+        console.log('❌ No user in request');
         res.status(StatusCode.UNAUTHORIZED).json(
             HttpResponse.error('User not authenticated', StatusCode.UNAUTHORIZED)
         );
         return null;
     }
 
+    console.log('  user.id:', req.user.id);
+    console.log('  user.status:', req.user.status);
+    
     // Only check status if it exists (for compatibility with different auth types)
     if (req.user.status && req.user.status !== 'approved') {
+        console.log('❌ User not approved');
         res.status(StatusCode.FORBIDDEN).json(
             HttpResponse.error('User account not approved. Please wait for admin approval.', StatusCode.FORBIDDEN)
         );
         return null;
     }
 
+    console.log('✅ User validated, returning ID:', req.user.id);
     return req.user.id;
 };
 

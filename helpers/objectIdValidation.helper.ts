@@ -11,7 +11,20 @@ import { StatusCode } from '../enums/statusCode.enums';
  * Check if a string is a valid MongoDB ObjectId
  */
 export const isValidObjectId = (id: string): boolean => {
-    return Types.ObjectId.isValid(id);
+    console.log('🔍 Validating ObjectId:');
+    console.log('  Input:', id, typeof id);
+    console.log('  Length:', id.length);
+    console.log('  Valid format:', Types.ObjectId.isValid(id));
+    
+    // Test creating new ObjectId
+    try {
+        const testId = new Types.ObjectId(id);
+        console.log('  Can create ObjectId:', testId.toString());
+        return Types.ObjectId.isValid(id);
+    } catch (error) {
+        console.log('  Error creating ObjectId:', error);
+        return false;
+    }
 };
 
 /**
