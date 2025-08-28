@@ -5,6 +5,7 @@
 
 ## 📋 TABLE OF CONTENTS
 - [Base Information](#base-information)
+- [Business Rules & Use Cases](#business-rules--use-cases)
 - [Authentication Endpoints](#authentication-endpoints)
 - [User Management Endpoints](#user-management-endpoints)
 - [Admin Endpoints](#admin-endpoints)
@@ -32,11 +33,263 @@
 
 ---
 
-## 🔐 AUTHENTICATION ENDPOINTS
+## � BUSINESS RULES & USE CASES
 
-### POST /auth/register
+### 🏋️‍♂️ GYM BOOKING SYSTEM SPECIFICATION
+
+This API serves a gym booking platform where clients can schedule individual workout sessions with capacity management and admin oversight.
+
+---
+
+### 👤 USER MANAGEMENT & AUTHENTICATION
+
+#### **User Registration & Role Management**
+- **Self-Registration**: Users can register accounts independently via API
+- **Default Role**: All new registrations automatically receive "client" role  
+- **Admin Creation**: Only possible through direct database modification (no API endpoint for admin creation by users)
+- **Approval Process**: All new client accounts require admin approval before access
+  - Status: `pending` → `approved` (by admin) → active access
+  - Status: `pending` → `rejected` (by admin) → account denied
+
+#### **Authentication Flow**
+```
+Registration → Pending Status → Admin Review → Approval/Rejection → Active/Denied Access
+```
+
+#### **Password Security**
+- **Reset Mechanism**: OTP-based password reset via email
+- **OTP Flow**: Request OTP → Verify OTP → Reset Password with token
+- **Security**: Time-limited OTP codes with email verification
+
+---
+
+### 💪 WORKOUT SESSION MANAGEMENT
+
+#### **Gym Capacity Rules**
+- **Maximum Concurrent Sessions**: 8 overlapping workout sessions allowed at any time
+- **Individual Sessions**: Each session accommodates exactly 1 person (client)
+- **Capacity Enforcement**: API prevents booking when 8 sessions already overlap the requested time
+
+#### **Booking Time Restrictions**
+- **Booking Window**: Clients can only book sessions within a 2-week rolling window
+  - Example: If current date is Week 1 of April 2025
+  - Allowed booking range: Week 1 + Week 2 of April 2025
+  - Cannot book beyond Week 2 or before current Week 1
+- **Future Booking**: No bookings allowed beyond the 2-week limit
+- **Past Booking**: No sessions can be created for past dates/times
+
+#### **Session Duration & Frequency Limits**
+- **Maximum Duration**: No single workout session can exceed 3 hours
+- **Daily Limit**: Each client is restricted to 1 workout session per day
+- **Validation**: API enforces these constraints during session creation
+
+#### **Permission Matrix**
+
+| Action | Client (Own Session) | Client (Other's Session) | Admin (Any Session) |
+|--------|---------------------|-------------------------|-------------------|
+| Create Session | ✅ Yes | ❌ N/A | ✅ Yes |
+| View Sessions | ✅ All sessions visible | ✅ All sessions visible | ✅ All sessions visible |
+| Update Session | ✅ Yes | ❌ Forbidden | ✅ Yes |
+| Delete Session | ✅ Yes | ❌ Forbidden | ✅ Yes |
+
+---
+
+### 🔒 ACCESS CONTROL & AUTHORIZATION
+
+#### **Role-Based Permissions**
+
+**Client Permissions:**
+- Create own workout sessions (within rules)
+- View all gym sessions (public visibility)
+- Update/delete only own sessions
+- Update own profile information
+- Request password reset
+
+**Admin Permissions:**
+- All client permissions +
+- View all users and their details
+- Approve/reject pending user accounts
+- Delete any workout session
+- View detailed admin analytics
+- Manage gym capacity and scheduling conflicts
+
+#### **Business Logic Enforcement**
+
+**Session Creation Validation:**
+1. User must have "approved" status
+2. Session must be within 2-week booking window
+3. Session duration must not exceed 3 hours
+4. User cannot have another session on same day
+5. Gym capacity (8 concurrent sessions) must not be exceeded
+6. Session cannot be in the past
+
+**User Account Lifecycle:**
+```
+Registration → pending → (Admin Action) → approved/rejected
+approved → Can create sessions
+rejected → Cannot access gym features
+```
+
+---
+
+### 📅 SCHEDULING BUSINESS RULES
+
+#### **Time Overlap Calculation**
+- **Overlap Definition**: Two sessions overlap if any part of their time ranges intersect
+- **Example Overlap**: 
+  - Session A: 10:00-11:00
+  - Session B: 10:30-11:30  
+  - Result: These sessions overlap and count toward the 8-session limit
+
+#### **Booking Window Logic**
+- **Rolling Window**: 2-week window moves with current date
+- **Week Definition**: Sunday to Saturday
+- **Calculation**: Current week + next week = allowed booking range
+- **Restriction Enforcement**: API rejects bookings outside this window
+
+#### **Daily Session Restriction**
+- **Definition**: One session per client per calendar day (00:00-23:59)
+- **Timezone**: Server timezone used for day calculation
+- **Enforcement**: API checks existing sessions for same client on same date
+
+---
+
+### 🔧 TECHNICAL IMPLEMENTATION DETAILS
+
+#### **Session Status Management**
+- **scheduled**: Future sessions awaiting execution
+- **completed**: Past sessions marked as finished
+- **cancelled**: Sessions cancelled by user or admin
+
+#### **Capacity Management Algorithm**
+1. Query all sessions overlapping with requested time range
+2. Count active sessions (scheduled status)
+3. If count >= 8, reject new booking
+4. If count < 8, allow booking and create session
+
+#### **Data Integrity Rules**
+- **Unique Constraints**: Email addresses must be unique across all users
+- **Referential Integrity**: All sessions must reference valid user accounts
+- **Soft Deletion**: Cancelled sessions retained for audit purposes
+- **Timestamp Validation**: Start time must be before end time
+
+---
+
+### 📊 BUSINESS METRICS & KPIs
+
+#### **Gym Utilization Tracking**
+- **Capacity Utilization**: Percentage of 8-session capacity used over time
+- **Peak Hours**: Time periods with highest booking density  
+- **User Activity**: Session frequency per client
+- **Booking Patterns**: Lead time analysis for reservation trends
+
+#### **Administrative Insights**
+- **Pending Approvals**: Queue of users awaiting admin review
+- **Rejected Accounts**: Analysis of rejection reasons and patterns
+- **Session Cancellations**: Frequency and timing of cancelled bookings
+- **System Usage**: API endpoint utilization and performance metrics
+
+---
+
+### ⚠️ CONSTRAINT VIOLATIONS & ERROR HANDLING
+
+#### **Common Business Rule Violations**
+
+**Capacity Exceeded (400)**
+```json
+{
+    "success": false,
+    "statusCode": 400,
+    "message": "Gym capacity exceeded. Maximum 8 overlapping sessions allowed.",
+    "data": {
+        "currentCapacity": 8,
+        "maxCapacity": 8,
+        "suggestedTimes": ["2025-08-30T09:00:00.000Z", "2025-08-30T14:00:00.000Z"]
+    }
+}
+```
+
+**Booking Window Violation (400)**
+```json
+{
+    "success": false,
+    "statusCode": 400,
+    "message": "Booking outside allowed 2-week window",
+    "data": {
+        "requestedDate": "2025-09-15",
+        "allowedRange": {
+            "start": "2025-08-25",
+            "end": "2025-09-08"
+        }
+    }
+}
+```
+
+**Daily Limit Exceeded (400)**
+```json
+{
+    "success": false,
+    "statusCode": 400,
+    "message": "Client already has a session scheduled for this date",
+    "data": {
+        "existingSession": {
+            "id": "64f1c2e8a1234567890abce0",
+            "date": "2025-08-30",
+            "timeRange": "08:00-09:00"
+        }
+    }
+}
+```
+
+**Session Duration Exceeded (400)**
+```json
+{
+    "success": false,
+    "statusCode": 400,
+    "message": "Session duration cannot exceed 3 hours",
+    "data": {
+        "requestedDuration": "4 hours 30 minutes",
+        "maximumDuration": "3 hours"
+    }
+}
+```
+
+---
+
+### 🎯 USE CASE SCENARIOS
+
+#### **Scenario 1: New User Onboarding**
+1. User registers account → Status: "pending"
+2. Admin reviews registration → Approves account
+3. User receives approval notification → Can now book sessions
+4. User attempts first booking → Success (within all constraints)
+
+#### **Scenario 2: Peak Hour Booking**
+1. 7 clients already have overlapping sessions at 6:00 PM
+2. 8th client books successfully → Gym at capacity
+3. 9th client attempts booking → Rejected (capacity exceeded)
+4. 9th client must choose different time slot
+
+#### **Scenario 3: Booking Window Management**
+1. Current date: August 25, 2025 (Week 1)
+2. Client can book: August 25 - September 8 (Week 1 + Week 2)
+3. Client attempts September 15 booking → Rejected (outside window)
+4. Client must wait until September 1 to book September 15
+
+#### **Scenario 4: Admin Session Management**
+1. Client reports issue with another client's session
+2. Admin reviews session details → Decides to cancel problematic session
+3. Admin deletes session → Capacity freed for other bookings
+4. Affected client receives notification of cancellation
+
+---
+
+## �🔐 AUTHENTICATION ENDPOINTS
+
+### POST /auth/sign-up (or /auth/register)
 **Description**: Register a new user or admin
 **Authentication**: None required
+**Note**: Both `/auth/sign-up` and `/auth/register` work identically
 
 #### Request Body
 ```json
@@ -106,9 +359,10 @@
 
 ---
 
-### POST /auth/login
+### POST /auth/sign-in (or /auth/login)
 **Description**: Login user/admin
 **Authentication**: None required
+**Note**: Both `/auth/sign-in` and `/auth/login` work identically
 
 #### Request Body
 ```json
