@@ -1,4 +1,5 @@
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
+import { UserStatus } from '../enums/userStatus.enums';
 
 /**
  * Interface for user accounts in the system
@@ -8,12 +9,14 @@ import { Document } from 'mongoose';
  * direct use with Mongoose models while providing type safety for user-related operations.
  */
 export interface UserInterface extends Document {
+    _id: Types.ObjectId;
     name: string;
     email: string;
     password: string;
     dateOfBirth: Date;
-    role: string;
+    role: 'client' | 'admin';
     avatar?: string;
+    status: UserStatus;
     createdAt: Date;
     updatedAt: Date;
     isDeleted: boolean;

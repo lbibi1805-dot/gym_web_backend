@@ -4,6 +4,8 @@ import { UserModel } from '../models/user.models';
 import { hashPassword } from '../helpers/compareEncrypt';
 import { createError } from '../helpers/controllerHelper';
 import { StatusCode } from '../enums/statusCode.enums';
+import { UserStatus } from '../enums/userStatus.enums';
+import { isValidObjectId } from '../helpers/objectIdValidation.helper';
 
 /**
  * User Service
@@ -17,35 +19,38 @@ export class UserService {
     */
     static async createUser(data: CreateUserInput): Promise<UserInterface> {
         try {
-        // Check if user already exists
-        const existingUser = await UserModel.findOne({ email: data.email });
-        if (existingUser) {
-            throw createError('Email already exists', StatusCode.CONFLICT);
-        }
+            // Check if user already exists
+            const existingUser = await UserModel.findOne({ email: data.email });
+            
+            if (existingUser) {
+                throw createError('Email already exists', StatusCode.CONFLICT);
+            }
 
-        // Hash password
-        const hashedPassword = await hashPassword(data.password);
+            // Hash password
+            const hashedPassword = await hashPassword(data.password);
 
-        // Create user
-        const userData = {
-            ...data,
-            password: hashedPassword,
-            role: data.role || 'user',
-        };
+            // Create user with default client role and pending status
+            // Note: Admin role can only be assigned by manually updating database
+            const userData = {
+                ...data,
+                password: hashedPassword,
+                role: data.role || 'client', // Always defaults to 'client'
+                status: UserStatus.PENDING,
+            };
 
-        const newUser = new UserModel(userData);
-        await newUser.save();
-        
-        return newUser;
+            const newUser = new UserModel(userData);
+            await newUser.save();
+            
+            return newUser;
         } catch (error) {
-        if (error && typeof error === 'object' && 'statusCode' in error) {
-            throw error;
-        }
-        const mongoError = error as { code?: number };
-        if (mongoError.code === 11000) {
-            throw createError('Email already exists', StatusCode.CONFLICT);
-        }
-        throw createError('Failed to create user', StatusCode.INTERNAL_SERVER_ERROR);
+            if (error && typeof error === 'object' && 'statusCode' in error) {
+                throw error;
+            }
+            const mongoError = error as { code?: number };
+            if (mongoError.code === 11000) {
+                throw createError('Email already exists', StatusCode.CONFLICT);
+            }
+            throw createError('Failed to create user', StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -71,10 +76,10 @@ export class UserService {
         const totalPages = Math.ceil(total / limit);
 
         return {
-        users,
-        total,
-        totalPages,
-        currentPage: page,
+            users,
+            total,
+            totalPages,
+            currentPage: page,
         };
     }
 
@@ -82,12 +87,17 @@ export class UserService {
     * Get user by ID
     */
     static async getUserById(id: string): Promise<UserInterface> {
+        // Validate ObjectId
+        if (!isValidObjectId(id)) {
+            throw createError('Invalid user ID format', StatusCode.BAD_REQUEST);
+        }
+
         const user = await UserModel
         .findOne({ _id: id, isDeleted: false })
         .select('-password');
         
         if (!user) {
-        throw createError('User not found', StatusCode.NOT_FOUND);
+            throw createError('User not found', StatusCode.NOT_FOUND);
         }
         
         return user;
@@ -98,8 +108,8 @@ export class UserService {
     */
     static async getUserByEmail(email: string): Promise<UserInterface | null> {
         return await UserModel.findOne({ 
-        email: email.toLowerCase(), 
-        isDeleted: false 
+            email: email.toLowerCase(), 
+            isDeleted: false 
         });
     }
 
@@ -108,6 +118,11 @@ export class UserService {
     */
     static async updateUser(id: string, data: UpdateUserInput): Promise<UserInterface> {
         try {
+        // Validate ObjectId
+        if (!isValidObjectId(id)) {
+            throw createError('Invalid user ID format', StatusCode.BAD_REQUEST);
+        }
+
         // Check if user exists
         const existingUser = await UserModel.findOne({ _id: id, isDeleted: false });
         if (!existingUser) {
@@ -133,9 +148,9 @@ export class UserService {
 
         const updatedUser = await UserModel
             .findOneAndUpdate(
-            { _id: id, isDeleted: false },
-            { $set: data },
-            { new: true, runValidators: true }
+                { _id: id, isDeleted: false },
+                { $set: data },
+                { new: true, runValidators: true }
             )
             .select('-password');
 
@@ -156,15 +171,20 @@ export class UserService {
     * Soft delete user
     */
     static async deleteUser(id: string): Promise<{ message: string }> {
+        // Validate ObjectId
+        if (!isValidObjectId(id)) {
+            throw createError('Invalid user ID format', StatusCode.BAD_REQUEST);
+        }
+
         const user = await UserModel.findOne({ _id: id, isDeleted: false });
         if (!user) {
-        throw createError('User not found', StatusCode.NOT_FOUND);
+            throw createError('User not found', StatusCode.NOT_FOUND);
         }
 
         await UserModel.findOneAndUpdate(
-        { _id: id },
-        { $set: { isDeleted: true } },
-        { new: true }
+            { _id: id },
+            { $set: { isDeleted: true } },
+            { new: true }
         );
 
         return { message: 'User deleted successfully' };
@@ -174,12 +194,17 @@ export class UserService {
     * Get current user profile
     */
     static async getCurrentUser(userId: string): Promise<UserInterface> {
+        // Validate ObjectId
+        if (!isValidObjectId(userId)) {
+            throw createError('Invalid user ID format', StatusCode.BAD_REQUEST);
+        }
+
         const user = await UserModel
         .findOne({ _id: userId, isDeleted: false })
         .select('-password');
         
         if (!user) {
-        throw createError('User not found', StatusCode.NOT_FOUND);
+            throw createError('User not found', StatusCode.NOT_FOUND);
         }
         
         return user;

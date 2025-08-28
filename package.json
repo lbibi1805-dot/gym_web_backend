@@ -5,13 +5,17 @@
   "scripts": {
     "build": "tsc && copyfiles -u 1 email/content/* build/email",
     "dev": "cross-env NODE_ENV=development ts-node-dev app.ts",
-    "start": "cross-env NODE_ENV=production node build/app.js"
+    "start": "cross-env NODE_ENV=production node build/app.js",
+    "test:api": "node test_api.js",
+    "test:api:install": "npm install axios colors"
   },
   "dependencies": {
     "agenda": "^5.0.0",
+    "axios": "^1.11.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.6.0",
+    "colors": "^1.4.0",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",

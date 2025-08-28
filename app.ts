@@ -14,6 +14,9 @@ dotenv.config();
 // Import routes
 import indexRouter from './routes/index';
 
+// Initialize cron jobs - TEMPORARILY DISABLED FOR TESTING
+// import './cron/cronConfig';
+
 const app = express();
 
 // Security middleware
@@ -40,7 +43,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
-app.use('/', indexRouter);
+app.use('/api', indexRouter);
 
 // 404 handler
 app.use((_req, res, _next) => {
@@ -50,13 +53,22 @@ app.use((_req, res, _next) => {
 // Error handler
 app.use(globalErrorHandler);
 
+// Database connection
+import { connectWithRetry } from './database/mongodb';
+
 // Start server if this file is run directly
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-        console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+    // Connect to MongoDB first
+    connectWithRetry().then(() => {
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+            console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+        });
+    }).catch((error) => {
+        console.error('Failed to start server due to database connection error:', error);
+        process.exit(1);
     });
 }
 
