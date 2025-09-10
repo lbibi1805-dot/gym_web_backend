@@ -1218,6 +1218,66 @@ status?: string (optional, 'scheduled' | 'completed' | 'cancelled')
 
 ---
 
+### GET /workout-sessions/all
+**Description**: Get all workout sessions (for clients to see gym schedule)
+**Authentication**: Required (Approved clients)
+
+#### Headers
+```
+Authorization: Bearer {token}
+```
+
+#### Query Parameters
+```
+startDate?: string (optional, YYYY-MM-DD format)
+endDate?: string (optional, YYYY-MM-DD format)
+status?: string (optional, 'scheduled' | 'completed' | 'cancelled')
+page?: number (optional, default: 1)
+limit?: number (optional, default: 10)
+```
+
+#### Valid Response (200)
+```json
+{
+    "success": true,
+    "statusCode": 200,
+    "message": "Workout sessions retrieved successfully",
+    "data": {
+        "sessions": [
+            {
+                "id": "64f1c2e8a1234567890abce0",
+                "clientId": "64f1c2e8a1234567890abcde",
+                "clientName": "John Doe",
+                "notes": "Morning cardio session",
+                "startTime": "2025-08-30T08:00:00.000Z",
+                "endTime": "2025-08-30T09:00:00.000Z",
+                "status": "scheduled",
+                "createdAt": "2025-08-27T12:00:00.000Z"
+            },
+            {
+                "id": "64f1c2e8a1234567890abce1",
+                "clientId": "64f1c2e8a1234567890abcdf",
+                "clientName": "Jane Smith",
+                "notes": "Evening strength training",
+                "startTime": "2025-08-30T18:00:00.000Z",
+                "endTime": "2025-08-30T19:00:00.000Z",
+                "status": "scheduled",
+                "createdAt": "2025-08-27T13:00:00.000Z"
+            }
+        ],
+        "pagination": {
+            "currentPage": 1,
+            "totalPages": 1,
+            "totalSessions": 2,
+            "hasNext": false,
+            "hasPrevious": false
+        }
+    }
+}
+```
+
+---
+
 ### GET /workout-sessions/client/{clientId}
 **Description**: Get all sessions for specific client (Admin only)
 **Authentication**: Admin required

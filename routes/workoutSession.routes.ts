@@ -33,6 +33,29 @@ router.post(
 router.get(
     '/',
     authMiddleware,
+    adminMiddleware,
+    validateRequest(getWorkoutSessionsQuerySchema, 'query'),
+    WorkoutSessionController.getWorkoutSessions
+);
+
+// Admin alias (matches documentation) -> GET /api/workout-sessions/admin/all
+router.get(
+    '/admin/all',
+    authMiddleware,
+    adminMiddleware,
+    validateRequest(getWorkoutSessionsQuerySchema, 'query'),
+    WorkoutSessionController.getWorkoutSessions
+);
+
+/**
+ * @route GET /api/workout-sessions/all
+ * @desc Get all workout sessions (for clients to see gym schedule)
+ * @access Private (Approved Clients)
+ */
+router.get(
+    '/all',
+    authMiddleware,
+    approvedUserMiddleware,
     validateRequest(getWorkoutSessionsQuerySchema, 'query'),
     WorkoutSessionController.getWorkoutSessions
 );
