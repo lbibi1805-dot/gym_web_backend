@@ -43,8 +43,7 @@ router.get(
     '/admin/all',
     authMiddleware,
     adminMiddleware,
-    validateRequest(getWorkoutSessionsQuerySchema, 'query'),
-    WorkoutSessionController.getWorkoutSessions
+    WorkoutSessionController.getAllSessionsForAdmin
 );
 
 /**

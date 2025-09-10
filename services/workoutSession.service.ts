@@ -368,4 +368,31 @@ export class WorkoutSessionService {
             updatedAt: session.updatedAt
         }));
     }
+
+    /**
+     * Get ALL workout sessions for admin (no filters, no pagination)
+     */
+    static async getAllSessionsForAdmin(): Promise<WorkoutSessionResponse[]> {
+        const sessions = await WorkoutSessionModel.find({ isDeleted: false })
+            .sort({ startTime: -1 });
+
+        const sessionsWithClientInfo = await Promise.all(
+            sessions.map(async (session) => {
+                const client = await UserModel.findById(session.clientId);
+                return {
+                    id: session._id.toString(),
+                    clientId: session.clientId.toString(),
+                    clientName: client?.name || 'Unknown Client',
+                    notes: session.notes,
+                    startTime: session.startTime,
+                    endTime: session.endTime,
+                    status: session.status,
+                    createdAt: session.createdAt,
+                    updatedAt: session.updatedAt
+                };
+            })
+        );
+
+        return sessionsWithClientInfo;
+    }
 }

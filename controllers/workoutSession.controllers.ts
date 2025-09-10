@@ -67,6 +67,24 @@ export class WorkoutSessionController {
     }
 
     /**
+     * Get ALL workout sessions for admin (no filters, no pagination)
+     */
+    static async getAllSessionsForAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            console.log('📊 getAllSessionsForAdmin called by user:', req.user?.email);
+            const sessions = await WorkoutSessionService.getAllSessionsForAdmin();
+            console.log('📊 Found', sessions.length, 'total sessions for admin');
+
+            res.status(StatusCode.OK).json(
+                HttpResponse.success(sessions, 'All workout sessions retrieved successfully')
+            );
+        } catch (error) {
+            console.error('❌ Error in getAllSessionsForAdmin:', error);
+            next(error);
+        }
+    }
+
+    /**
      * Update an existing workout session
      */
     public static async updateWorkoutSession(
