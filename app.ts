@@ -31,13 +31,27 @@ app.use(limiter);
 
 // CORS configuration
 const corsOptions = {
-    origin: [
-        'http://localhost:3000',
-        'https://gym-web-front-end.vercel.app',
-        'https://gym-web-front-end.vercel.app/',
-        process.env.FRONTEND_URL,
-        process.env.FRONTEND_URL ? process.env.FRONTEND_URL + '/' : undefined
-    ].filter((url): url is string => Boolean(url)), // Remove any undefined values
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = [
+            'http://localhost:3000',
+            'https://gym-web-front-end.vercel.app',
+            process.env.FRONTEND_URL
+        ].filter(Boolean);
+        
+        // Check if origin matches any allowed origins or is a Vercel preview deployment
+        const isAllowed = allowedOrigins.some(allowed => origin === allowed || origin === allowed + '/') ||
+                         origin.includes('vercel.app') && origin.includes('gym-web-front');
+        
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            console.log('CORS blocked origin:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
