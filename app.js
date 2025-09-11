@@ -32,7 +32,7 @@ app.use(limiter);
 const corsOptions = {
   origin: [
     'http://localhost:3000',
-    'https://gym-web-frontend-gray.vercel.app',
+    'https://gym-web-front-end.vercel.app',
     process.env.FRONTEND_URL
   ].filter(Boolean), // Remove any undefined values
   credentials: true,
