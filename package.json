@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "echo 'Skipping TypeScript compilation for now' && copyfiles -u 1 email/content/* ./email/ || true",
+    "build": "tsc --target es2018 --module commonjs --outDir build --skipLibCheck --noImplicitAny false --strict false --esModuleInterop && copyfiles -u 1 email/content/* build/email || true",
     "build:ts": "./node_modules/.bin/tsc --project tsconfig.production.json --skipLibCheck --noEmitOnError false && copyfiles -u 1 email/content/* build/email",
     "build:copy": "copyfiles -u 1 email/content/* build/email",
     "dev": "cross-env NODE_ENV=development ts-node-dev app.ts",
-    "start": "NODE_ENV=production ts-node app.ts",
+    "start": "NODE_ENV=production node build/app.js",
     "test:api": "node test_api.js",
     "test:api:install": "npm install axios colors"
   },
