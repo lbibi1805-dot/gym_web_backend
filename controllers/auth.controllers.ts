@@ -51,9 +51,9 @@ export const signOut = async (_req: Request, res: Response, next: NextFunction):
     }
 };
 
-export const changePassword = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+export const changePassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const userId = validateAuthenticatedUser(req, res);
+        const userId = validateAuthenticatedUser(req as any, res);
         if (!userId) return;
         
         const { currentPassword, newPassword } = req.body;

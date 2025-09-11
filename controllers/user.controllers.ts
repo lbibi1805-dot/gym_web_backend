@@ -50,8 +50,8 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
 
 export const updateUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { id } = req.params;
-        const updatedUser = await UserService.updateUser(id, req.body);
+        const { id } = (req as any).params;
+        const updatedUser = await UserService.updateUser(id, (req as any).body);
         res.status(StatusCode.OK).json(HttpResponse.success(updatedUser, 'User updated successfully'));
     } catch (err) {
         next(err);
@@ -60,7 +60,7 @@ export const updateUser = async (req: AuthenticatedRequest, res: Response, next:
 
 export const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { id } = req.params;
+        const { id } = (req as any).params;
         const result = await UserService.deleteUser(id);
         res.status(StatusCode.OK).json(HttpResponse.success(result, 'User deleted successfully'));
     } catch (err) {
