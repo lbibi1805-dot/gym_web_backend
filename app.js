@@ -15,6 +15,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust proxy for Render deployment
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
@@ -26,10 +29,17 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS configuration
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'https://gym-web-frontend-gray.vercel.app',
+    process.env.FRONTEND_URL
+  ].filter(Boolean), // Remove any undefined values
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
 
 // Basic middleware
 app.use(logger('combined'));
