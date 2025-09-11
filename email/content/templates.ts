@@ -3,42 +3,48 @@
  */
 export const otpEmailTemplate = (name: string, otp: string): string => {
     return `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">🏋️ Gym Web</h1>
-            <p style="color: #f0f0f0; margin: 10px 0 0 0; font-size: 16px;">Password Reset Request</p>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%);">
+        
+        <!-- Header Section -->
+        <div style="background: linear-gradient(135deg, #f97316 0%, #dc2626 100%); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0; box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3);">
+            <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">🏋️ Nguyen Ngoc Tai Fitness</h1>
+            <p style="color: #fed7aa; margin: 15px 0 0 0; font-size: 18px; font-weight: 500;">Password Reset Request</p>
         </div>
         
-        <div style="background: white; padding: 40px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
-            <h2 style="color: #333; margin-bottom: 20px;">Hi ${name},</h2>
+        <!-- Main Content -->
+        <div style="background: linear-gradient(180deg, #1f2937 0%, #111827 100%); padding: 40px; border: 1px solid #374151; border-top: none; border-radius: 0 0 12px 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
+            <h2 style="color: #f9fafb; margin-bottom: 24px; font-size: 24px; font-weight: 600;">Xin chào ${name},</h2>
             
-            <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-            We received a request to reset your password. Please use the following OTP to proceed with your password reset:
+            <p style="color: #d1d5db; line-height: 1.6; margin-bottom: 24px; font-size: 16px;">
+                Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu của bạn. Vui lòng sử dụng mã OTP sau để tiếp tục quá trình đặt lại mật khẩu:
             </p>
             
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0;">
-            <h1 style="color: #667eea; font-size: 36px; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">
-                ${otp}
-            </h1>
-            <p style="color: #888; margin: 10px 0 0 0; font-size: 14px;">This code expires in 5 minutes</p>
+            <!-- OTP Box -->
+            <div style="background: linear-gradient(135deg, #374151 0%, #4b5563 100%); padding: 30px; border-radius: 16px; text-align: center; margin: 30px 0; border: 2px solid #f97316; box-shadow: 0 0 20px rgba(249, 115, 22, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
+                <h1 style="color: #f97316; font-size: 42px; letter-spacing: 12px; margin: 0; font-family: 'Courier New', monospace; font-weight: 700; text-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);">
+                    ${otp}
+                </h1>
+                <p style="color: #9ca3af; margin: 15px 0 0 0; font-size: 14px; font-weight: 500;">Mã này có hiệu lực trong 5 phút</p>
             </div>
             
-            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; margin: 20px 0;">
-            <p style="color: #856404; margin: 0; font-size: 14px;">
-                <strong>⚠️ Security Notice:</strong> If you didn't request this password reset, please ignore this email. 
-                Your account remains secure.
-            </p>
+            <!-- Security Notice -->
+            <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); border: 1px solid #f87171; padding: 20px; border-radius: 12px; margin: 24px 0; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);">
+                <p style="color: #fef2f2; margin: 0; font-size: 14px; line-height: 1.5;">
+                    <strong style="color: #fed7d7;">⚠️ Thông báo bảo mật:</strong> Nếu bạn không yêu cầu đặt lại mật khẩu này, vui lòng bỏ qua email này. 
+                    Tài khoản của bạn vẫn được bảo vệ an toàn.
+                </p>
             </div>
             
-            <p style="color: #666; line-height: 1.6; margin-bottom: 30px;">
-            Enter this OTP on the password reset page to continue. The code is valid for 5 minutes from the time this email was sent.
+            <p style="color: #d1d5db; line-height: 1.6; margin-bottom: 30px; font-size: 16px;">
+                Nhập mã OTP này trên trang đặt lại mật khẩu để tiếp tục. Mã có hiệu lực trong 5 phút kể từ khi email này được gửi.
             </p>
             
-            <div style="border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 30px;">
-            <p style="color: #888; font-size: 12px; line-height: 1.4; margin: 0;">
-                This is an automated email from Gym Web. Please don't reply to this email.<br>
-                If you need help, contact our support team.
-            </p>
+            <!-- Footer -->
+            <div style="border-top: 1px solid #374151; padding-top: 24px; margin-top: 30px; background: linear-gradient(90deg, transparent 0%, #374151 50%, transparent 100%); background-size: 100% 1px; background-repeat: no-repeat; background-position: top;">
+                <p style="color: #6b7280; font-size: 12px; line-height: 1.5; margin: 0; text-align: center;">
+                    Đây là email tự động từ <strong style="color: #f97316;">Nguyen Ngoc Tai Fitness</strong>. Vui lòng không trả lời email này.<br>
+                    Nếu bạn cần hỗ trợ, hãy liên hệ với đội ngũ hỗ trợ của chúng tôi.
+                </p>
             </div>
         </div>
         </div>
@@ -53,55 +59,65 @@ export const sessionDeletionEmailTemplate = (
     sessionTitle: string, 
     sessionDate: string,
     sessionTime: string,
-    reason: string = 'administrative decision'
+    reason: string = 'quyết định của quản trị viên'
     ): string => {
     return `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">🏋️ Gym Web</h1>
-            <p style="color: #f0f0f0; margin: 10px 0 0 0; font-size: 16px;">Session Cancellation Notice</p>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%);">
+        
+        <!-- Header Section -->
+        <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0; box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);">
+            <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">🏋️ Nguyen Ngoc Tai Fitness</h1>
+            <p style="color: #fecaca; margin: 15px 0 0 0; font-size: 18px; font-weight: 500;">Thông báo hủy buổi tập</p>
         </div>
         
-        <div style="background: white; padding: 40px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
-            <h2 style="color: #333; margin-bottom: 20px;">Hi ${userName},</h2>
+        <!-- Main Content -->
+        <div style="background: linear-gradient(180deg, #1f2937 0%, #111827 100%); padding: 40px; border: 1px solid #374151; border-top: none; border-radius: 0 0 12px 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
+            <h2 style="color: #f9fafb; margin-bottom: 24px; font-size: 24px; font-weight: 600;">Xin chào ${userName},</h2>
             
-            <div style="background: #fff5f5; border: 1px solid #fed7d7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #e53e3e; margin: 0 0 15px 0; font-size: 18px;">
-                ❌ Your workout session has been cancelled
-            </h3>
-            
-            <div style="background: white; padding: 15px; border-radius: 6px; margin: 15px 0;">
-                <p style="margin: 0 0 8px 0; color: #333;"><strong>Session:</strong> ${sessionTitle}</p>
-                <p style="margin: 0 0 8px 0; color: #333;"><strong>Date:</strong> ${sessionDate}</p>
-                <p style="margin: 0 0 8px 0; color: #333;"><strong>Time:</strong> ${sessionTime}</p>
-                <p style="margin: 0; color: #666;"><strong>Reason:</strong> ${reason}</p>
+            <!-- Cancellation Notice Box -->
+            <div style="background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%); border: 2px solid #dc2626; padding: 24px; border-radius: 16px; margin: 24px 0; box-shadow: 0 0 20px rgba(220, 38, 38, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
+                <h3 style="color: #fecaca; margin: 0 0 20px 0; font-size: 20px; font-weight: 600; display: flex; align-items: center;">
+                    <span style="font-size: 24px; margin-right: 12px;">❌</span> Buổi tập của bạn đã bị hủy
+                </h3>
+                
+                <!-- Session Details -->
+                <div style="background: linear-gradient(135deg, #374151 0%, #4b5563 100%); padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #6b7280;">
+                    <div style="display: grid; gap: 12px;">
+                        <p style="margin: 0; color: #f9fafb; font-size: 16px;"><strong style="color: #f97316;">Buổi tập:</strong> <span style="color: #d1d5db;">${sessionTitle}</span></p>
+                        <p style="margin: 0; color: #f9fafb; font-size: 16px;"><strong style="color: #f97316;">Ngày:</strong> <span style="color: #d1d5db;">${sessionDate}</span></p>
+                        <p style="margin: 0; color: #f9fafb; font-size: 16px;"><strong style="color: #f97316;">Thời gian:</strong> <span style="color: #d1d5db;">${sessionTime}</span></p>
+                        <p style="margin: 0; color: #f9fafb; font-size: 16px;"><strong style="color: #f97316;">Lý do:</strong> <span style="color: #9ca3af;">${reason}</span></p>
+                    </div>
+                </div>
             </div>
-            </div>
             
-            <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-            We apologize for any inconvenience this may cause. Your session has been removed from your schedule, 
-            and you can book a new session at your convenience.
+            <p style="color: #d1d5db; line-height: 1.6; margin-bottom: 24px; font-size: 16px;">
+                Chúng tôi xin lỗi vì sự bất tiện này có thể gây ra. Buổi tập của bạn đã được xóa khỏi lịch trình, 
+                và bạn có thể đặt buổi tập mới vào thời gian thuận tiện.
             </p>
             
+            <!-- CTA Button -->
             <div style="text-align: center; margin: 30px 0;">
-            <a href="#" style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
-                Book New Session
-            </a>
+                <a href="#" style="background: linear-gradient(135deg, #f97316 0%, #dc2626 100%); color: white; padding: 16px 32px; text-decoration: none; border-radius: 12px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3); transition: all 0.2s ease;">
+                    🏋️ Đặt buổi tập mới
+                </a>
             </div>
             
-            <div style="background: #e8f4fd; border: 1px solid #bee5eb; padding: 15px; border-radius: 6px; margin: 20px 0;">
-            <p style="color: #0c5460; margin: 0; font-size: 14px;">
-                <strong>💡 Tip:</strong> To avoid future cancellations, please ensure you book sessions within our guidelines 
-                and arrive on time for your scheduled workouts.
-            </p>
+            <!-- Tip Box -->
+            <div style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); border: 1px solid #3b82f6; padding: 20px; border-radius: 12px; margin: 24px 0; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);">
+                <p style="color: #dbeafe; margin: 0; font-size: 14px; line-height: 1.5;">
+                    <strong style="color: #93c5fd;">💡 Mẹo:</strong> Để tránh việc hủy buổi tập trong tương lai, vui lòng đảm bảo bạn đặt buổi tập 
+                    trong khung thời gian cho phép và đến đúng giờ cho các buổi tập đã lên lịch.
+                </p>
             </div>
             
-            <div style="border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 30px;">
-            <p style="color: #888; font-size: 12px; line-height: 1.4; margin: 0;">
-                This is an automated notification from Gym Web. If you have questions about this cancellation, 
-                please contact our support team.<br>
-                Email: support@gymweb.com | Phone: (555) 123-4567
-            </p>
+            <!-- Footer -->
+            <div style="border-top: 1px solid #374151; padding-top: 24px; margin-top: 30px; background: linear-gradient(90deg, transparent 0%, #374151 50%, transparent 100%); background-size: 100% 1px; background-repeat: no-repeat; background-position: top;">
+                <p style="color: #6b7280; font-size: 12px; line-height: 1.5; margin: 0; text-align: center;">
+                    Đây là thông báo tự động từ <strong style="color: #f97316;">Nguyen Ngoc Tai Fitness</strong>. Nếu bạn có câu hỏi về việc hủy này, 
+                    vui lòng liên hệ với đội ngũ hỗ trợ của chúng tôi.<br>
+                    <strong style="color: #9ca3af;">Email:</strong> support@nguyenngoctaifitness.com | <strong style="color: #9ca3af;">Điện thoại:</strong> (84) 123-456-789
+                </p>
             </div>
         </div>
         </div>
