@@ -30,10 +30,19 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS configuration
-app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+const corsOptions = {
+    origin: [
+        'http://localhost:3000',
+        'https://gym-web-front-end.vercel.app',
+        'https://gym-web-front-end.vercel.app/',
+        process.env.FRONTEND_URL,
+        process.env.FRONTEND_URL ? process.env.FRONTEND_URL + '/' : undefined
+    ].filter((url): url is string => Boolean(url)), // Remove any undefined values
     credentials: true,
-}));
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
 
 // Basic middleware
 app.use(logger('combined'));
