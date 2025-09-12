@@ -3,11 +3,11 @@
  */
 export const otpEmailTemplate = (name: string, otp: string): string => {
     return `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%);">
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%); color: #f9fafb;">
         
         <!-- Header Section -->
         <div style="background: linear-gradient(135deg, #f97316 0%, #dc2626 100%); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0; box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3);">
-            <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">🏋️ Nguyen Ngoc Tai Fitness</h1>
+            <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3);"> Nguyen Ngoc Tai Fitness</h1>
             <p style="color: #fed7aa; margin: 15px 0 0 0; font-size: 18px; font-weight: 500;">Password Reset Request</p>
         </div>
         
@@ -21,7 +21,7 @@ export const otpEmailTemplate = (name: string, otp: string): string => {
             
             <!-- OTP Box -->
             <div style="background: linear-gradient(135deg, #374151 0%, #4b5563 100%); padding: 30px; border-radius: 16px; text-align: center; margin: 30px 0; border: 2px solid #f97316; box-shadow: 0 0 20px rgba(249, 115, 22, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
-                <h1 style="color: #f97316; font-size: 42px; letter-spacing: 12px; margin: 0; font-family: 'Courier New', monospace; font-weight: 700; text-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);">
+                <h1 style="color: #f97316; font-size: 42px; letter-spacing: 2px; margin: 0; font-family: 'Courier New', monospace; font-weight: 700; text-shadow: 0 2px 8px rgba(249, 115, 22, 0.3); word-wrap: break-word;">
                     ${otp}
                 </h1>
                 <p style="color: #9ca3af; margin: 15px 0 0 0; font-size: 14px; font-weight: 500;">Mã này có hiệu lực trong 5 phút</p>
