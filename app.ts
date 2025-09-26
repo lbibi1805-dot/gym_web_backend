@@ -19,6 +19,9 @@ import indexRouter from './routes/index';
 
 const app = express();
 
+// Trust proxy for Render deployment (fixes rate limiting issues)
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
